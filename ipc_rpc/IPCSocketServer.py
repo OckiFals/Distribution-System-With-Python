@@ -39,7 +39,7 @@ class IPCSocketServer:
 
         if self.statecounter is 2:
             # back to 1
-            self.statecounter = 1
+            self.statecounter = 0
         else:
             # counter increment by 1
             self.statecounter += 1
@@ -79,7 +79,7 @@ class IPCSocketServer:
                         json_['a'],
                         json_['b'],
                         result,
-                        self.statecounter+1
+                        3 if (self.statecounter is 0) else self.statecounter
                     )
                 )
         except KeyboardInterrupt:
