@@ -13,7 +13,7 @@ import socket
 class IPCSocketClient:
     def __init__(self):
         self.targetip = '127.0.0.1' if len(sys.argv) is not 2 else sys.argv[1]
-        self.targetport = '8080' if len(sys.argv) is not 3 else sys.argv[2]
+        self.targetport = '8082' if len(sys.argv) is not 3 else sys.argv[2]
 
     def createconnection(self):
         tcpsock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -33,7 +33,7 @@ class IPCSocketClient:
         try:
             operasi = int(raw_input('Pilih operasi:'))
 
-            if operasi not in range(0, 4):
+            if operasi not in range(0, 5):
                 print 'operasi tidak tersedia\n'
                 return self.readinput()
 
@@ -51,6 +51,9 @@ class IPCSocketClient:
         json_data = self.readinput()
         sock = self.createconnection()
         sock.send(json_data)
+        print '-------------------------------------------------'
+        print sock.recv(1024)
+        print '-------------------------------------------------'
         sock.close()
 
     def run(self):
@@ -58,5 +61,5 @@ class IPCSocketClient:
             self.sendoversocket()
 
 
-client = SocketClient()
+client = IPCSocketClient()
 client.run()

@@ -14,25 +14,54 @@ import xmlrpclib
 class IPCSocketServer:
     def __init__(self):
         self.targetip = '0.0.0.0' if len(sys.argv) is not 2 else sys.argv[1]
-        self.targetport = '8082' if len(sys.argv) is not 3 else sys.argv[2]
+        self.port = '8082' if len(sys.argv) is not 3 else sys.argv[2]
+        self.statecounter = 0
+        self.operand = ''
 
     def createipcconnection(self):
         tcpsock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        tcpsock.bind(('', int(self.targetport)))
+        tcpsock.bind(('', int(self.port)))
         return tcpsock
 
     @staticmethod
     def createrpcconncetion(port):
         return xmlrpclib.ServerProxy(
-            "http://127.0.0.1:8088/"
+            "http://127.0.0.1:%s/" % port
         )
 
     def roundrobin(self):
-        pass
+        # rpc nodes port numbers
+        rpc_node_ports = [8084, 8086, 8088]
 
-    def rpccall(self):
-        proxy = self.createrpcconncetion(8080)
-        return proxy.tambah(1, 2)
+        rpc_conn = self.createrpcconncetion(
+            rpc_node_ports[self.statecounter]
+        )
+
+        if self.statecounter is 2:
+            # back to 1
+            self.statecounter = 1
+        else:
+            # counter increment by 1
+            self.statecounter += 1
+
+        return rpc_conn
+
+    def rpccall(self, json_):
+        proxy = self.roundrobin()
+        operate_in_int = int(json_['operasi'])
+
+        if 1 is operate_in_int:
+            self.operand = 'tambah'
+            return proxy.tambah(int(json_['a']), int(json_['b']))
+        elif 2 is operate_in_int:
+            self.operand = 'kurang'
+            return proxy.kurang(int(json_['a']), int(json_['b']))
+        elif 3 is operate_in_int:
+            self.operand = 'kali'
+            return proxy.kali(int(json_['a']), int(json_['b']))
+        elif 4 is operate_in_int:
+            self.operand = 'bagi'
+            return proxy.bagi(int(json_['a']), int(json_['b']))
 
     def receiveoversocket(self):
         sock = self.createipcconnection()
@@ -40,16 +69,25 @@ class IPCSocketServer:
         try:
             while 1:
                 conn, addr = sock.accept()
-                data = conn.recv(100)
-                dictionary_mhs = json.loads(data)
-                print dictionary_mhs
+                data = conn.recv(1024)
+                json_ = json.loads(data)
+                print json_
+                result = str(self.rpccall(json_))
+                conn.send(
+                    "Hasil pemanggilan %s(%s, %s) = %s \nDilayani oleh RPC server %s" % (
+                        self.operand,
+                        json_['a'],
+                        json_['b'],
+                        result,
+                        self.statecounter+1
+                    )
+                )
         except KeyboardInterrupt:
             sock.close()
 
     def run(self):
-        self.rpccall()
-        # self.receiveoversocket()
+        self.receiveoversocket()
 
 
-server = SocketServer()
+server = IPCSocketServer()
 server.run()
