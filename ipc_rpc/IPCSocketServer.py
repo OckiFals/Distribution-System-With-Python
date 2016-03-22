@@ -48,20 +48,8 @@ class IPCSocketServer:
 
     def rpccall(self, json_):
         proxy = self.roundrobin()
-        operate_in_int = int(json_['operasi'])
-
-        if 1 is operate_in_int:
-            self.operand = 'tambah'
-            return proxy.tambah(int(json_['a']), int(json_['b']))
-        elif 2 is operate_in_int:
-            self.operand = 'kurang'
-            return proxy.kurang(int(json_['a']), int(json_['b']))
-        elif 3 is operate_in_int:
-            self.operand = 'kali'
-            return proxy.kali(int(json_['a']), int(json_['b']))
-        elif 4 is operate_in_int:
-            self.operand = 'bagi'
-            return proxy.bagi(int(json_['a']), int(json_['b']))
+        self.operand = json_['operasi']
+        return getattr(proxy, self.operand)(int(json_['a']), int(json_['b']))
 
     def receiveoversocket(self):
         sock = self.createipcconnection()

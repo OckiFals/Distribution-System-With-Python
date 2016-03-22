@@ -21,6 +21,17 @@ class IPCSocketClient:
         return tcpsock
 
     @staticmethod
+    def operationtostring(operasi):
+        if 1 is operasi:
+            return 'tambah'
+        elif 2 is operasi:
+            return 'kurang'
+        elif 3 is operasi:
+            return 'kali'
+        else:
+            return 'bagi'
+
+    @staticmethod
     def parsingtojson(operasi, a, b):
         return json.dumps({
             'operasi': operasi,
@@ -42,7 +53,9 @@ class IPCSocketClient:
 
             a = int(raw_input('Masukkan variabel a:'))
             b = int(raw_input('Masukkan variabel b:'))
-            return self.parsingtojson(operasi, a, b)
+            return self.parsingtojson(
+                self.operationtostring(operasi), a, b
+            )
         except Exception:
             print 'Masukan tidak cocok\n\n'
             return self.readinput()
